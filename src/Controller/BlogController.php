@@ -37,21 +37,17 @@ class BlogController extends AbstractController
     /**
      * @Route("/post/{id}", name="blog_by_id", requirements={"id"="\d+"})
      */
-    public function post($id, Request $request)
+    public function post(BlogPost $post)
     {
-    	return $this->json(
-	    	$this->getDoctrine()->getRepository(BlogPost::class)->find($id)
-	    );
+    	return $this->json($post);
     }
 
     /**
      * @Route("/post/{slug}", name="blog_by_slug")
      */
-    public function postBySlug($slug, Request $request)
+    public function postBySlug(BlogPost $post)
     {
-    	return $this->json(
-	    	$this->getDoctrine()->getRepository(BlogPost::class)->findOneBy(['slug' => $slug])
-    	);
+        return $this->json($post);
     }
 
     /**
