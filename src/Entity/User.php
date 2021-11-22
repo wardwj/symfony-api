@@ -7,6 +7,7 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -21,6 +22,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     }
  * )
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @UniqueEntity("username")
+ * @UniqueEntity("email")
  */
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -49,6 +52,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * )
      */
     private $password;
+
+    /**
+     * @Assert\NotBlank()
+     * @Assert\Expression(
+     *     "this.getPassword() === this.getRetypedPassword()",
+     *     message="Password does not match"
+     * )
+     */
+    private $retypedPassword;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -236,5 +248,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRetypedPassword()
+    {
+        return $this->retypedPassword;
+    }
+
+    /**
+     * @param mixed $retypedPassword
+     */
+    public function setRetypedPassword($retypedPassword): void
+    {
+        $this->retypedPassword = $retypedPassword;
     }
 }
