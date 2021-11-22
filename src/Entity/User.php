@@ -17,13 +17,31 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiResource(
  *     itemOperations={
  *          "get"= {
- *              "access_control"="is_granted('IS_AUTHENTICATED_FULLY')"
+ *              "access_control"="is_granted('IS_AUTHENTICATED_FULLY')",
+ *              "normalization_context"={
+ *                  "groups"={"get"}
+ *              }
+ *          },
+ *          "put"= {
+ *              "access_control"="is_granted('IS_AUTHENTICATED_FULLY') and object == user",
+ *              "denormalization_context"={
+ *                  "groups"={"put"}
+ *              },
+ *              "normalization_context"={
+ *                  "groups"={"get"}
+ *              }
  *          }
  *     },
- *     collectionOperations={"post"},
- *     normalizationContext={
-            "groups"={"read"}
- *     }
+ *     collectionOperations={
+ *          "post"={
+ *              "denormalization_context"={
+ *                  "groups"={"post"}
+ *              },
+ *              "normalization_context"={
+ *                  "groups"={"get"}
+ *              }
+ *          }
+ *     },
  * )
  * @ORM\Entity(repositoryClass=UserRepository::class)
  * @UniqueEntity("username")
@@ -35,13 +53,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"read"})
+     * @Groups({"get"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"read"})
+     * @Groups({"get", "post"})
      * @Assert\NotBlank()
      * @Assert\Length(min=6, max=255)
      */
@@ -49,6 +67,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"put", "post"})
      * @Assert\NotBlank
      * @Assert\Regex(
      *     pattern="/(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{7,}/",
@@ -58,6 +77,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $password;
 
     /**
+     * @Groups({"put", "post"})
      * @Assert\NotBlank()
      * @Assert\Expression(
      *     "this.getPassword() === this.getRetypedPassword()",
@@ -68,7 +88,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"read"})
+     * @Groups({"get", "put", "post"})
      * @Assert\NotBlank
      * @Assert\Length(min=5, max=255)
      */
@@ -76,6 +96,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"post", "put"})
      * @Assert\NotBlank
      * @Assert\Email()
      * @Assert\Length(min=6, max=255)
@@ -89,13 +110,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="author")
-     * @Groups({"read"})
+     * @Groups({"get"})
      */
     private $comments;
 
     /**
      * @ORM\OneToMany(targetEntity=BlogPost::class, mappedBy="author")
-     * @Groups({"read"})
+     * @Groups({"get"})
      */
     private $posts;
 
@@ -195,7 +216,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeComment(Comment $comment): self
     {
         if ($this->comments->removeElement($comment)) {
-            // set the owning side to null (unless already changed)
+            // set the owning side to null (unless algety changed)
             if ($comment->getAuthor() === $this) {
                 $comment->setAuthor(null);
             }
@@ -225,7 +246,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removePost(BlogPost $post): self
     {
         if ($this->posts->removeElement($post)) {
-            // set the owning side to null (unless already changed)
+            // set the owning side to null (unless algety changed)
             if ($post->getAuthor() === $this) {
                 $post->setAuthor(null);
             }
